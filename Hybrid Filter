@@ -1,0 +1,65 @@
+################################################# Assignment 1 ###########################################
+# Import required libraries
+import cv2
+import numpy as np
+from google.colab.patches import cv2_imshow
+from matplotlib import pyplot as plt
+from google.colab import files
+
+# Function to apply a Gaussian blur to extract low frequencies
+def low_pass_filter(image, kernel_size):
+    return cv2.GaussianBlur(image, (kernel_size, kernel_size), 0)
+
+# Function to extract high frequencies by subtracting the low-frequency image
+def high_pass_filter(image, kernel_size):
+    low_frequencies = cv2.GaussianBlur(image, (kernel_size, kernel_size), 0)
+    return cv2.subtract(image, low_frequencies)
+
+# Function to create a hybrid image
+def create_hybrid_image(image1, image2, kernel_size):
+    # Convert images to grayscale (optional: for simplicity)
+    image1_gray = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    image2_gray = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+    # Apply filters
+    low_frequencies = low_pass_filter(image1_gray, kernel_size)
+    high_frequencies = high_pass_filter(image2_gray, kernel_size)
+
+    # Combine low and high frequencies
+    hybrid_image = cv2.add(low_frequencies, high_frequencies)
+
+    return hybrid_image
+
+# Upload images
+print("Upload the first image:")
+uploaded1 = files.upload()
+image1_path = list(uploaded1.keys())[0]
+print("Upload the second image:")
+uploaded2 = files.upload()
+image2_path = list(uploaded2.keys())[0]
+
+# Read images
+image1 = cv2.imread(image1_path)
+image2 = cv2.imread(image2_path)
+
+# Ensure both images have the same dimensions
+image1 = cv2.resize(image1, (256, 256))  # Resize to 256x256
+image2 = cv2.resize(image2, (256, 256))
+
+# Create hybrid image
+kernel_size = 21  # Adjust this to control the frequency blending
+hybrid_image = create_hybrid_image(image1, image2, kernel_size)
+
+# Display the images
+print("Low-Frequency Image (Image 1):")
+cv2_imshow(low_pass_filter(image1, kernel_size))
+
+print("High-Frequency Image (Image 2):")
+cv2_imshow(high_pass_filter(image2, kernel_size))
+
+print("Hybrid Image:")
+cv2_imshow(hybrid_image)
+
+# Save the hybrid image
+cv2.imwrite("hybrid_image.jpg", hybrid_image)
+print("Hybrid image saved as 'hybrid_image.jpg'")
